@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { type NextRequest, NextResponse } from "next/server"
-import { getSupabaseEnv } from "@/lib/env"
+import { getSupabaseEnv } from "./env"
 
 const publicPaths = ["/", "/auth/login"]
 
