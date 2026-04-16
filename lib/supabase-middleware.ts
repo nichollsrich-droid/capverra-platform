@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr"
+import { createServerClient } from "@supabase/ssr"
 import { type NextRequest, NextResponse } from "next/server"
 import { getSupabaseEnv } from "./env"
 
@@ -11,32 +11,20 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
-  const { url, anonKey } = getSupabaseEnv()
+  const { url: supabaseUrl, anonKey } = getSupabaseEnv()
 
-  const supabase = createServerClient(url, anonKey, {
+  const supabase = createServerClient(supabaseUrl, anonKey, {
     cookies: {
-      get(name: string) {
-        return request.cookies.get(name)?.value
+      getAll() {
+        return request.cookies.getAll()
       },
-      set(name: string, value: string, options: CookieOptions) {
-        // NextRequest cookies don't accept full CookieOptions (e.g. maxAge).
-        // Persist the cookie to the outgoing response with options instead.
-        request.cookies.set(name, value)
-        response = NextResponse.next({
-          request: {
-            headers: request.headers,
-          },
+      setAll(cookiesToSet, headers) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options)
         })
-        response.cookies.set({ name, value, ...options })
-      },
-      remove(name: string, options: CookieOptions) {
-        request.cookies.set(name, "")
-        response = NextResponse.next({
-          request: {
-            headers: request.headers,
-          },
+        Object.entries(headers).forEach(([key, value]) => {
+          response.headers.set(key, value)
         })
-        response.cookies.set({ name, value: "", ...options, maxAge: 0 })
       },
     },
   })
@@ -49,9 +37,9 @@ export async function updateSession(request: NextRequest) {
   const isApiPath = request.nextUrl.pathname.startsWith("/api")
 
   if (!user && !isPublicPath && !isApiPath) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/auth/login"
-    return NextResponse.redirect(url)
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = "/auth/login"
+    return NextResponse.redirect(redirectUrl)
   }
 
   return response
