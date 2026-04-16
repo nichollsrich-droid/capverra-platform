@@ -19,7 +19,9 @@ export async function updateSession(request: NextRequest) {
         return request.cookies.get(name)?.value
       },
       set(name: string, value: string, options: CookieOptions) {
-        request.cookies.set({ name, value, ...options })
+        // NextRequest cookies don't accept full CookieOptions (e.g. maxAge).
+        // Persist the cookie to the outgoing response with options instead.
+        request.cookies.set(name, value)
         response = NextResponse.next({
           request: {
             headers: request.headers,
@@ -28,7 +30,7 @@ export async function updateSession(request: NextRequest) {
         response.cookies.set({ name, value, ...options })
       },
       remove(name: string, options: CookieOptions) {
-        request.cookies.set({ name, value: "", ...options, maxAge: 0 })
+        request.cookies.set(name, "")
         response = NextResponse.next({
           request: {
             headers: request.headers,
