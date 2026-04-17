@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Home, Users, Package, Settings, HelpCircle, LogOut } from "lucide-react"
+import { Home, Users, Package, Settings, HelpCircle, LogIn, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 
@@ -25,8 +25,9 @@ const navigation = [
 export function TopNavigation() {
   const pathname = usePathname()
   const router = useRouter()
-  const [userName, setUserName] = useState("User")
+  const [userName, setUserName] = useState("Demo User")
   const [userEmail, setUserEmail] = useState("No email")
+  const [isDemoUser, setIsDemoUser] = useState(true)
 
   useEffect(() => {
     let mounted = true
@@ -37,11 +38,19 @@ export function TopNavigation() {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!mounted || !user) return
+      if (!mounted) return
+
+      if (!user) {
+        setIsDemoUser(true)
+        setUserName("Demo User")
+        setUserEmail("No email")
+        return
+      }
 
       setUserEmail(user.email ?? "No email")
       const metadataName = String(user.user_metadata?.full_name ?? "").trim()
       setUserName(metadataName || user.email?.split("@")[0] || "User")
+      setIsDemoUser(false)
     }
 
     loadUser()
@@ -119,10 +128,19 @@ export function TopNavigation() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </DropdownMenuItem>
+            {isDemoUser ? (
+              <DropdownMenuItem asChild>
+                <Link href="/auth/login" className="flex items-center">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Log in
+                </Link>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
