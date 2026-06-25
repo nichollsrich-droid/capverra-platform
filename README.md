@@ -17,4 +17,5 @@
 5. Start the app:
    - `npm run dev`
 
+
 The app now uses Supabase Auth + RLS. All data is scoped to the authenticated user session.
